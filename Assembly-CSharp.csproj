@@ -60,6 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\Core.cs" />
     <Compile Include="Assets\Scripts\DisplayFac.cs" />
     <Compile Include="Assets\Scripts\FactionUtils.cs" />

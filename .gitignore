@@ -1,0 +1,13 @@
+# Folders containing meta deta
+/Library
+/Temp
+/Logs
+/obj
+/.vs
+
+# Meta data files
+.csproj
+.suo
+
+
+

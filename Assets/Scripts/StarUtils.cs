@@ -6,6 +6,8 @@ public class StarUtils : MonoBehaviour
 {
     public static List<Star> allStars = new List<Star>();
     private static bool onRealisticView = false;
+    public static int chanceOfSN = 15000; // chance of supernova for EACH late star = 1/chanceOfSN per year
+    public static int numLatestars;
     public static bool allowViewChange = false;
     public GameObject star;
 
@@ -26,7 +28,14 @@ public class StarUtils : MonoBehaviour
             // Generate the galaxy with Core.N... stars
             GenerateAllStars(Core.NUMBEROFSTARS);
             Core.funcDiv = 'c'; 
-        }      
+        }
+        else if (Core.funcDiv == 'f')
+        {
+            if (Random.Range(0.0f, 120.0f)<0.005)
+            {
+                // Generate technosignature emission in 'random' direction (but not up or down on the galactic plane!)
+            }
+        }
     }
 
     // this function allows the user to toggle between the 'realistic' view and the 'civilisations' view
@@ -67,60 +76,72 @@ public class StarUtils : MonoBehaviour
         }
     }
 
-    // NOT YET IMPLEMENTED
-    // this function builds a map for each star: a sorted list of all nearby stars, which is used to tell the controlling faction whom they can communicate with,
-    // since there is a range limit for each technosignature. The fact that the list is sorted is important in the implementation of a faction's communication list
-
-    // HOWEVER it needs to be said that this functionality is probably not going to be needed. Since all communications are going to be re-framed as between stars rather than factions
-    // additionally, colonisation can be worked out on the fly (it will happen rarely enough that it really doesn't matter much)
-    public static List<StarRoute> BuildStarRoutes(Star star)
-    {
-        List<StarRoute> srList = new List<StarRoute>();
-
-        int counter = 0;
-        while (counter < allStars.Count)
-        {
-            float distanceBetween = 0;
-            // get distance to star s.position - this.position AND pythag?
-            // if distance > [a limit] don't add to list
-            // if 0, obviously also don't add (because it's THIS star)
-
-            //srList.Add(new StarRoute(counter, distanceBetween));
-            counter = counter + 1;
-        }
-
-        srList.Sort(delegate(StarRoute sr1, StarRoute sr2)
-        {
-            return sr1.GetDistance().CompareTo(sr2.GetDistance());
-        });
-
-        return srList;
-    }
-
-    // We'll depricate this
-    public static void BuildAllStarMaps()
-    {
-        foreach (Star s in allStars)
-        {
-            //s.SetNearbyStars(BuildStarRoutes(s));
-        }
-    }
-
     // generates the stars for the "allStars" list
     public void GenerateAllStars(int nStars)
     {
         int counter = 0;
-        while (counter<nStars)
+        // Generate 90.0% of all stars as normal stars
+        while (counter<(nStars*0.9f))
         { 
             allStars.Add(new Star(Instantiate(star, GenerateStarLoc(), Quaternion.identity)));
-            counter = counter + 1;
+            counter = counter + 1;            
+        }
+        numLatestars = nStars - counter;
+        // Generate the rest as late-stage stars
+        while (counter<nStars)
+        {
+            allStars.Add(new Star(Instantiate(star, GenerateStarLoc(), Quaternion.identity)));
+            counter = counter + 1;            
         }
     }
 
-    // select star, when the user clicks a star, zoom in on it and show a popup of information?? maybe, or maybe this function is pointless
-    public static void SelectStar(int starIndex)
+    public static void LaunchAllSupernovae(int nStars)
     {
-        //stub
+        int randN;
+        for (int i = nStars - numLatestars; i < nStars; i++)
+        {
+            randN = Random.Range(0, chanceOfSN);
+            if (randN == 0)
+                SupernovaAt(i);
+        }
+    }
+
+    public static void SupernovaAt(int ind)
+    {
+        List<string> factionsDying = new List<string>();
+        if (allStars[ind].controllingFaction!=99)
+        {
+            //Debug.Log("STUB: Supernova at " + allStars[ind].gObj.name);
+            allStars[ind].controllingFaction = 99;
+            
+            // check the homeplanets of nearby civilisations, if they are in range... OOF!
+            foreach (Faction fac in FactionUtils.allFactions)
+            {
+                if (Vector3.Distance(allStars[ind].gObj.transform.position, allStars[fac.homeStar].gObj.transform.position) < 0.85f) //range normally = 0.85f
+                {
+                    if (fac.isAlive)
+                    {
+                        fac.Die(allStars[ind].gObj.name, Core.years);
+                        factionsDying.Add(fac.name);
+                    }
+                }
+            }
+            if (factionsDying.Count>0)
+            {
+                if (factionsDying.Count > 2)
+                    NotificationUtils.AddLethalSupernova(allStars[ind].gObj.name, "", factionsDying.Count.ToString());
+                else if (factionsDying.Count > 1)
+                    NotificationUtils.AddLethalSupernova(allStars[ind].gObj.name, factionsDying[0], factionsDying[1]);
+                else
+                    NotificationUtils.AddLethalSupernova(allStars[ind].gObj.name, factionsDying[0], "");
+            }
+            //else
+            //NotificationUtils.AddSupernova(allStars[ind].gObj.name);
+            //NOTIFICATION DISABLED!
+
+            allStars[ind].factionColour = Color.black;
+            allStars[ind].ChangeColour(Color.black);
+        }            
     }
 
     // generates the location of each star with increasing frequency toward the galactic nucleus (with a cutoff at the point where life should be basically unable to develop)
@@ -151,8 +172,7 @@ public class StarUtils : MonoBehaviour
 // the object of which, wait for it... stars are composed of.
 public class Star
 {
-    public List<StarRoute> nearbyStars = new List<StarRoute>();
-    public string controllingFaction;
+    public int controllingFaction;
 
     // Over 70,000 unique names
     private static List<string> adjectives = new List<string> { "Red", "Blu", "Lo", "Hi", "Mi", "Ni", "Mei", "Har", "Sof", "Of", "Brei", "Dar", "Lon", "Dul", "Sur", "Ex", "Int", "Ela", "Weit", "Wei", "Weu", "North", "Nor", "Su", "Sud", "Eas", "Ost", "Wes", "New", "Ol", "Sto", "Sta", "Mag", "Sil", "Go", "Vor", "Glas", "Ar", "Nar", "Ide", "Narro", "Wid", "Tal", "Klein", "Ein", "Schwarz", "Fau", "Gruen", "Wel", "Bie", "Gros", "Krasna", "Sam", "San", "Sanc", "Neu", "Alt", "Venta", "Ater", "Kol", "Kis", "Vila", "For", "Bas", "Ander", "Nis", "Las", "Hib", "Nos", "Sed", "Ara", "Au", "In", "Sid", "Il", "Ely", "Nov", "Ac", "Cara", "Sus" };
@@ -170,7 +190,7 @@ public class Star
         factionColour = Color.white;
         ChangeColour(Color.white);
         ChangeEmission(Color.black);
-        controllingFaction = "none";
+        controllingFaction = 95; //95 = none, 99 = gone supernova, 98 = uninhabitable by nearby supernova (only applied to home stars of "dead" civilisations
     }
 
     // used for the change view function, but it as of yet unimplemented
@@ -208,28 +228,5 @@ public class Star
         generated = generated + " " + postverbus[Random.Range(0, postverbus.Count)];
 
         return generated;
-    }
-}
-
-// this will be depricated
-public class StarRoute
-{
-    public int destIndex;
-    public float distance;
-
-    public StarRoute(int inputIndex, float inputDist)
-    {
-        destIndex = inputIndex;
-        distance = inputDist;
-    }
-
-    public int GetDestination()
-    {
-        return destIndex;
-    }
-
-    public float GetDistance()
-    {
-        return distance;
     }
 }

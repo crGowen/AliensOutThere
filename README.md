@@ -1,25 +1,41 @@
 # AliensOutThere
 
-GIT IGNORES NOT YET CONFIGURED!!!
-
 Build with Unity 2018.3.1f1
 
-Main menu not yet created, so just test scenes inside Unity Editor only rather than building (otherwise you won't be able to exit)
+Main menu not going to be featured (final build will be webapp)
 
 
 
-Controls:
+# Controls:
 
 R - reset view
 
-(click on a civilisation) - look to civilisation
+Left click (on a civilisation in list) - look to civilisation
 
-scrollwheel - zoom in or out
+Left click and drag - rotate view
+
+Scrollwheel - zoom in or out; alternate control - press Z / X
 
 , / . - increase / decrease time warp
 
 Space - change between civilisation/realistic view (the realistic view isn't yet implemented, but essentially replaces all stars with, well, things that look like actual stars (and the galactic nucleus will be visible in realistic view)
 
-WASD - move camera manually (not yet implemented)
+WASD - move camera manually
 
-Rightclick and drag - rotate camera manually
+Q / E - roll view
+
+Shift / Ctrl - hold to accelerate or fine control whilst pressing WASD/Q+E controls
+
+# Still to be done:
+
+Realistic view
+
+Sounds
+
+Star info panel
+
+Optimisation and refactoring... there's a lot of this to be done, the code is written with most variables poorly name and set to public access (public access so they can be viewed in the Unity Editor)
+
+Commenting the code
+
+

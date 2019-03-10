@@ -1,8 +1,10 @@
 # AliensOutThere
 
-Build with Unity 2018.3.1f1
+Build with Unity 2018.3.8f1
 
-Main menu not going to be featured (final build will be webapp)
+Open in Unity Editor, go to Assets > Scenes and open the Galaxy scene. Then set the display resolution to 1920x1080 at 1x scale (may need to define a custom resolution to do this).
+
+Main menu not going to be featured (final build will be web app)
 
 
 
@@ -14,7 +16,7 @@ Left click (on a civilisation in list) - look to civilisation
 
 Left click and drag - rotate view
 
-Scrollwheel - zoom in or out (does the same thing as W / S but scroll wheel has better control)
+Scroll wheel - zoom in or out (does the same thing as W / S but scroll wheel has better control)
 
 , / . - increase / decrease time warp
 
@@ -39,5 +41,3 @@ Star info panel
 Optimisation and refactoring... there's a lot of this to be done, the code is written with most variables poorly name and set to public access (public access so they can be viewed in the Unity Editor)
 
 Commenting the code
-
-

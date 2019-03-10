@@ -6,9 +6,10 @@ public class StarUtils : MonoBehaviour
 {
     public static List<Star> allStars = new List<Star>();
     private static bool onRealisticView = false;
-    public static int chanceOfSN = 15000; // chance of supernova for EACH late star = 1/chanceOfSN per year
+    public static int chanceOfSN = 8000; // chance of supernova for EACH late star = 1/chanceOfSN per year
     public static int numLatestars;
     public static bool allowViewChange = false;
+    public static int facViewable = 99;
     public GameObject star;
 
     // Start is called before the first frame update
@@ -34,6 +35,68 @@ public class StarUtils : MonoBehaviour
             if (Random.Range(0.0f, 120.0f)<0.005)
             {
                 // Generate technosignature emission in 'random' direction (but not up or down on the galactic plane!)
+            }
+        }
+    }
+
+    public static void CheckForClick()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit))
+            {
+                if (hit.collider!=null)
+                {
+                    facViewable = 99;
+                    if (Vector3.Distance(GameObject.Find("ViewCam").transform.position, hit.collider.gameObject.transform.position) > 3.0f)
+                        GameObject.Find("ViewCam").transform.position = new Vector3(hit.collider.gameObject.transform.position.x - 1.5f, hit.collider.gameObject.transform.position.y + 1f, hit.collider.gameObject.transform.position.z - 1.5f);
+                    GameObject.Find("ViewCam").transform.LookAt(hit.collider.gameObject.transform);
+
+                    Star s = allStars[int.Parse(hit.collider.gameObject.name)];
+
+                    if (s.controllingFaction == 99)
+                        GameObject.Find("CivilisationName").GetComponent<UnityEngine.UI.Text>().text = s.starName + " Nebula";
+                    else
+                        GameObject.Find("CivilisationName").GetComponent<UnityEngine.UI.Text>().text = s.starName;
+
+                    if (s.factionColour==Color.black || s.factionColour == Color.white)
+                        GameObject.Find("CivilisationName").GetComponent<UnityEngine.UI.Text>().color = Color.grey;
+                    else
+                        GameObject.Find("CivilisationName").GetComponent<UnityEngine.UI.Text>().color = s.factionColour;
+
+                    GameObject.Find("CivilisationsIdentified").GetComponent<UnityEngine.UI.Text>().text = "";
+
+                    switch (s.controllingFaction)
+                    {
+                        case 99:
+                            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This nebula is what remains of the star " + s.starName + ", which went supernova.";
+                            break;
+                        case 98:
+                            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "It seems this star system was once home to intelligent life, but all that remains now is ruins.";
+                            break;
+                        case 95:
+                            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This star system is not inhabited by any civilisation.";
+                            break;
+                        default:
+                            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This star system is home to the " + FactionUtils.allFactions[s.controllingFaction].name + " civilisation.";
+                            GameObject.Find("CivilisationsIdentified").GetComponent<UnityEngine.UI.Text>().text = "Press F to view faction.";
+                            GameObject.Find("CivilisationsIdentified").GetComponent<UnityEngine.UI.Text>().color = Color.yellow;
+                            facViewable = s.controllingFaction;
+                            break;
+                    }
+
+                    if (s.controllingFaction != 99 && s.supernovaRisk)
+                    {
+                        GameObject.Find("TechsigsFound").GetComponent<UnityEngine.UI.Text>().text = "Supernova risk! This star is approaching the end of its life and has high mass.";
+                        GameObject.Find("TechsigsFound").GetComponent<UnityEngine.UI.Text>().color = Color.red;
+                    }
+                    else
+                    {
+                        GameObject.Find("TechsigsFound").GetComponent<UnityEngine.UI.Text>().text = "";
+                    }
+                }
             }
         }
     }
@@ -83,14 +146,14 @@ public class StarUtils : MonoBehaviour
         // Generate 90.0% of all stars as normal stars
         while (counter<(nStars*0.9f))
         { 
-            allStars.Add(new Star(Instantiate(star, GenerateStarLoc(), Quaternion.identity)));
+            allStars.Add(new Star(Instantiate(star, GenerateStarLoc(), Quaternion.identity), false, counter));
             counter = counter + 1;            
         }
         numLatestars = nStars - counter;
         // Generate the rest as late-stage stars
         while (counter<nStars)
         {
-            allStars.Add(new Star(Instantiate(star, GenerateStarLoc(), Quaternion.identity)));
+            allStars.Add(new Star(Instantiate(star, GenerateStarLoc(), Quaternion.identity), true, counter));
             counter = counter + 1;            
         }
     }
@@ -121,7 +184,7 @@ public class StarUtils : MonoBehaviour
                 {
                     if (fac.isAlive)
                     {
-                        fac.Die(allStars[ind].gObj.name, Core.years);
+                        fac.Die(allStars[ind].starName, Core.years);
                         factionsDying.Add(fac.name);
                     }
                 }
@@ -129,11 +192,11 @@ public class StarUtils : MonoBehaviour
             if (factionsDying.Count>0)
             {
                 if (factionsDying.Count > 2)
-                    NotificationUtils.AddLethalSupernova(allStars[ind].gObj.name, "", factionsDying.Count.ToString());
+                    NotificationUtils.AddLethalSupernova(allStars[ind].starName, "", factionsDying.Count.ToString());
                 else if (factionsDying.Count > 1)
-                    NotificationUtils.AddLethalSupernova(allStars[ind].gObj.name, factionsDying[0], factionsDying[1]);
+                    NotificationUtils.AddLethalSupernova(allStars[ind].starName, factionsDying[0], factionsDying[1]);
                 else
-                    NotificationUtils.AddLethalSupernova(allStars[ind].gObj.name, factionsDying[0], "");
+                    NotificationUtils.AddLethalSupernova(allStars[ind].starName, factionsDying[0], "");
             }
             //else
             //NotificationUtils.AddSupernova(allStars[ind].gObj.name);
@@ -179,14 +242,18 @@ public class Star
     private static List<string> nouns = new List<string> { "tow", "dac", "lit", "scha", "ite", "is", "plex", "bid", "orta", "terra", "schild", "pen", "zen", "fort", "and", "key", "rut", "ei", "ear", "son", "ent", "ice", "katz", "hun", "heim", "este", "feld", "am", "as", "a", "koshka", "dom", "stin", "anz", "ko", "ja", "el", "tor", "strana", "gorod", "ae", "canis", "roma", "gallia", "nia", "don", "ton", "belga", "via", "null", "ra", "marit", "senex", "bus", "fir", "feuer", "lex", "loch", "tus", "domus", "ser", "ius", "ium", "il", "um", "us", "itz", "ca", "anov", "ski", "stein", "ev", "ine" };
     private static List<string> postverbus = new List<string> { "Nova", "Prime", "Beta", "Alpha", "Gamma", "Epsilon", "Delta", "Prospect", "Aster", "Eta", "Tau", "Omega", "Eden", "Mu", "Rho", "Phi" };
     public GameObject gObj;
+    public bool supernovaRisk;
+    public string starName;
 
     public Color factionColour;
 
 
-    public Star(GameObject inputObj)
+    public Star(GameObject inputObj, bool lateStar, int inputInd)
     {
+        supernovaRisk = lateStar;
         gObj = inputObj;
-        gObj.name = GenerateName();
+        gObj.name = inputInd.ToString();
+        starName = GenerateName();
         factionColour = Color.white;
         ChangeColour(Color.white);
         ChangeEmission(Color.black);
@@ -197,6 +264,8 @@ public class Star
     public void ChangeColour(Color colour)
     {
         LODGroup lodG = gObj.GetComponent<LODGroup>();
+        if (controllingFaction != 99 && colour == Color.black)
+            colour = Color.grey;
         foreach (LOD lod in lodG.GetLODs())
         {
             foreach (Renderer r in lod.renderers)

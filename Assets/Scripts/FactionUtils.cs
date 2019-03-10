@@ -79,9 +79,9 @@ public static class FactionUtils
         
 
         if (allFactions[index].isAlive)
-            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This civilisation's star system is " + StarUtils.allStars[allFactions[index].homeStar].gObj.name + ". " + allFactions[index].moreInfo;
+            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This civilisation's home star is " + StarUtils.allStars[allFactions[index].homeStar].starName + ". " + allFactions[index].moreInfo;
         else
-            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This civilisation's star system was " + StarUtils.allStars[allFactions[index].homeStar].gObj.name + ". " + allFactions[index].moreInfo;
+            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This civilisation's home star was " + StarUtils.allStars[allFactions[index].homeStar].starName + ". " + allFactions[index].moreInfo;
 
         //GameObject.Find("ControlledStars").GetComponent<UnityEngine.UI.Text>().text = "Controlled Stars: " + allFactions[index].controlledSystems.Count.ToString();
         //GameObject.Find("ControlledStars").GetComponent<UnityEngine.UI.Text>().text = ""; // unecessary feature
@@ -157,7 +157,7 @@ public static class FactionUtils
         string cname = "";
         bool PVreached = false;
 
-        foreach (char c in StarUtils.allStars[stIndex].gObj.name)
+        foreach (char c in StarUtils.allStars[stIndex].starName)
         {
             if (c == ' ') PVreached = true;
             if (!PVreached) cname = cname + c;
@@ -299,9 +299,9 @@ public class Faction
                     //Convert this message to notification!
                     identifiedTechSigs.Add(FactionUtils.allFactions[incomingTechSig[ind].sender].index);
                     if (FactionUtils.allFactions[incomingTechSig[ind].sender].isAlive)
-                        NotificationUtils.AddTSI(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].gObj.name, name, "");
+                        NotificationUtils.AddTSI(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].starName, name, "");
                     else
-                        NotificationUtils.AddTSI(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].gObj.name, name, ", one of the last signals of a long dead civilisation");
+                        NotificationUtils.AddTSI(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].starName, name, ", one of the last signals of a long dead civilisation");
                     break;
                 case '1':
                     //Debug.Log("The " + name + " civilisation has now identified MULTIPLE technosignatures originating from the region of space around the " + FactionUtils.allFactions[incomingTechSig[ind].sender].name + " civilisation!");

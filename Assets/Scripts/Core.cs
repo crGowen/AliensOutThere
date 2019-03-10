@@ -161,10 +161,15 @@ public class Core : MonoBehaviour
         if (Input.GetMouseButton(0))
             CameraController.Rotation();
 
+        if (Input.GetKey(KeyCode.F) && StarUtils.facViewable != 99)
+            DisplayFac.ViewFacSt(StarUtils.facViewable);
+
         CameraController.Scroll();
 
         // each frame call the notification control, which manages the display of notable events (e.g. Supernovae) to the user
         NotificationUtils.NotificationControl();
+
+        StarUtils.CheckForClick();
     }
 
     private void IncreaseWarp()

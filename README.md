@@ -14,7 +14,7 @@ Left click (on a civilisation in list) - look to civilisation
 
 Left click and drag - rotate view
 
-Scrollwheel - zoom in or out; alternate control - press Z / X
+Scrollwheel - zoom in or out (does the same thing as W / S but scroll wheel has better control)
 
 , / . - increase / decrease time warp
 
@@ -23,6 +23,8 @@ Space - change between civilisation/realistic view (the realistic view isn't yet
 WASD - move camera manually
 
 Q / E - roll view
+
+Z / X - move view up and down
 
 Shift / Ctrl - hold to accelerate or fine control whilst pressing WASD/Q+E controls
 

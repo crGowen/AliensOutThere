@@ -6,7 +6,7 @@ public class CameraController : MonoBehaviour
 {
     private static float speed = 7f;
     private static float mspeed = 1.5f;
-    private static float sspeed = 12f;
+    private static float sspeed = 7f;
     private static float rspeed = 20f;
 
     // Start is called before the first frame update

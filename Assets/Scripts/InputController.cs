@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class InputController : MonoBehaviour
 {
     private const float KEY_SPEED = 7f;
     private const float MOUSE_SPEED = 1.5f;
@@ -12,9 +12,7 @@ public class CameraController : MonoBehaviour
     // If the user is holding SHIFT, some actions should be accelerated, or if holding CTRL, decelerated
     private static float GetMultiplier()
     {
-        if (Input.GetKey(KeyCode.LeftControl))
-            return 0.2f;
-        else if (Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKey(KeyCode.LeftShift))
             return 4.0f;
         else
             return 1.0f;
@@ -78,5 +76,64 @@ public class CameraController : MonoBehaviour
     public static void MoveDown()
     {
         GameObject.Find("ViewCam").transform.Translate(Time.deltaTime * KEY_SPEED * GetMultiplier() * Vector3.down);
+    }
+
+    public static void CheckInputs()
+    {
+        // Input functions here... in future projects let's put all this stuff in a dedicated file for neatness. Lessons learned.
+        if (Input.GetKeyDown(KeyCode.Period))
+        {
+            Core.IncreaseWarp();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Comma))
+        {
+            Core.DecreaseWarp();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            GameObject.Find("ViewCam").transform.localPosition = new Vector3(-10.0f, 16.0f, -42.0f);
+            GameObject.Find("ViewCam").transform.LookAt(new Vector3(0.0f, 0.0f, 0.0f));
+        }
+
+        if (Input.GetKey(KeyCode.W))
+            MoveForward();
+
+        if (Input.GetKey(KeyCode.A))
+            MoveLeft();
+
+        if (Input.GetKey(KeyCode.S))
+            MoveBack();
+
+        if (Input.GetKey(KeyCode.D))
+            MoveRight();
+
+        if (Input.GetKey(KeyCode.Z))
+            MoveDown();
+
+        if (Input.GetKey(KeyCode.X))
+            MoveUp();
+
+        if (Input.GetKey(KeyCode.Q))
+            RollClockwise();
+
+        if (Input.GetKey(KeyCode.E))
+            RollCounterClockwise();
+
+        if (Input.GetMouseButton(0))
+            Rotation();
+
+        if (Input.GetKeyDown(KeyCode.M))
+            Core.MuteAll();
+
+        if (Input.GetKeyDown(KeyCode.F) && Core.facViewable != 99)
+            DisplayFac.ViewFacSt(Core.facViewable);
+
+        // function to check if a star was clicked on, it's in StarUtils because it's actually a fairly long function involving raycasts, and to avoid having to specify "StarUtils." for variables
+        // however, just look most other things in this area, should be wrapped in a faction in a dedicated controls file for future projects.
+        Core.CheckForClick();
+
+        Scroll();
     }
 }

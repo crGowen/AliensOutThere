@@ -661,10 +661,8 @@ GameObject:
   m_Component:
   - component: {fileID: 208272834}
   - component: {fileID: 208272833}
-  - component: {fileID: 208272835}
   - component: {fileID: 208272837}
   - component: {fileID: 208272836}
-  - component: {fileID: 208272838}
   m_Layer: 0
   m_Name: ControlEmpty
   m_TagString: Untagged
@@ -685,6 +683,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   star: {fileID: 3673743123707262618, guid: c0e7c27e4e7fb8b4fbd4d251a89cc770, type: 3}
+  SNflare: {fileID: 701224249527253492, guid: 0cc135dc8f7a5b34c9c9899468e67605, type: 3}
+  soundSource: {fileID: 1407972663337440864, guid: a7814cf4d08df204aa15c47f18d3f0b3,
+    type: 3}
 --- !u!4 &208272834
 Transform:
   m_ObjectHideFlags: 0
@@ -697,20 +698,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &208272835
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 208272832}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5769d3088e8c65047805ab70b8d9b87c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!108 &208272836
 Light:
   m_ObjectHideFlags: 0
@@ -761,19 +750,6 @@ Halo:
     serializedVersion: 2
     rgba: 4278783502
   m_Size: 8
---- !u!114 &208272838
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 208272832}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6383b3fbd6b2af247b21bc5ba3b5351c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  flare: {fileID: 701224249527253492, guid: 0cc135dc8f7a5b34c9c9899468e67605, type: 3}
 --- !u!1 &330256954
 GameObject:
   m_ObjectHideFlags: 0
@@ -4135,7 +4111,7 @@ RectTransform:
   - {fileID: 1518754594}
   - {fileID: 1000867699}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -4206,7 +4182,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2011369862
 GameObject:

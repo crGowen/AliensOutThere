@@ -4,54 +4,45 @@ using UnityEngine;
 
 public class Core : MonoBehaviour
 {
-    public float warp;
-    public static char funcDiv = 'a';
-    public static int NUMBEROFSTARS;
-    public static int NUMBEROFFACTIONS;
-    public static float rotationDelta;
-    public static float clockDelta;
-    public static float yearDelta;
-    public static float notificationDelta;
-    public static Vector3 focusOn;
-    public static float years = 0.0f;
-    public static List<int> toRemove;
+    public const int NUMBER_OF_STARS = 1500;
+    public const int NUMBER_OF_FACTIONS = 14;
 
-    // Start is called before the first frame update
+    private float warp;
+    public static char funcDiv = 'a';
+    private static float rotationDelta;
+    private static float clockDelta;
+    private static float yearDelta;
+    private static float notificationDelta;
+    public static float years = 0.0f;
+
+    // Set camera position and look at the galactic nucleus
+    // and set warp to 2 Weeks Per Second
     void Start()
     {
-        focusOn = new Vector3(0.0f, 0.0f, 0.0f);
         GameObject.Find("ViewCam").transform.localPosition = new Vector3(-10.0f, 16.0f, -42.0f);
         GameObject.Find("ViewCam").transform.LookAt(new Vector3(0.0f, 0.0f, 0.0f));
         warp = 1.0f;
-        NUMBEROFSTARS = 5000; // maximum of 8000
-        NUMBEROFFACTIONS = 14; // maximum of 16
         funcDiv = 'b';
-        toRemove = new List<int>();
         GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 2 weeks per sec");
-        GameObject.Find("ViewIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("View Mode: Civilisations");
     }
 
     // Update is called once per frame
     void Update()
     {
         // function divider splits various functions up so that they are not all performed in one frame
-        // these functions really have no need to take place at 60fps, so to lighten the load on the CPU we'll
+        // these functions really have no need to take place every single frame, so to lighten the load on the CPU we'll
         // just alternate between functions between each frame.
 
-        // note that this costs memory, but saves the CPU usage
+        // note that this costs a tiny bit of memory, but saves the CPU usage
 
         switch (funcDiv)
         {
-            case 'a':
-                // nothing
-                break;
-            case 'b':
-                break;
+            // Generation of factions (happens after generation of stars)
+            // "why isn't GenerateAllStars here too?" -- because I'm an idiot and started out tying StarUtils to a gameobject, and it's too late to decouple, it makes no functional or performance difference though
             case 'c':
-                FactionUtils.GenerateAllFactions(NUMBEROFFACTIONS);
+                FactionUtils.GenerateAllFactions(NUMBER_OF_FACTIONS);
                 FactionUtils.DisplayFacInfo(0);
                 funcDiv = 'd';
-                StarUtils.allowViewChange = true;
                 break;
             case 'd':
                 // rotate the stars around the galactic nucleus (speed of rotation depends on time warp)
@@ -65,7 +56,7 @@ public class Core : MonoBehaviour
                 funcDiv = 'e';
                 break;
             case 'e':
-                // time keeping
+                // time keeping, updates the clock: "t = + [] years"
                 clockDelta = clockDelta + Time.deltaTime;
                 rotationDelta = rotationDelta + Time.deltaTime;
                 years = years + (clockDelta * warp/26.0f);
@@ -76,60 +67,45 @@ public class Core : MonoBehaviour
                 clockDelta = 0.0f;
                 break;
             case 'f':
+                // launches supernovae and technosignatures... this is done once every year
                 clockDelta = clockDelta + Time.deltaTime;
                 rotationDelta = rotationDelta + Time.deltaTime;
                 if ((years - yearDelta) > 1.0f)
                 {
                     yearDelta = years;
-                    StarUtils.LaunchAllSupernovae(NUMBEROFSTARS);
+                    StarUtils.LaunchAllSupernovae(NUMBER_OF_STARS);
                     FactionUtils.LaunchTechnosignatures();
                 }
                 foreach (Faction fac in FactionUtils.allFactions)
                 {
-                    toRemove.Clear();
                     for (int i = 0; i < fac.incomingTechSig.Count; i++)
                     {
                         if (years > fac.incomingTechSig[i].timeToReceive)
                         {
                             fac.ReadTechSig(i);
-                            toRemove.Add(i);
+                            fac.RemoveTechSig(i);
+                            i--;
                         }
-                    }
-                    // has to be seperate to prevent a very rare index out of bounds error (where multiple TechSigs are due to be received)
-                    foreach (int i in toRemove)
-                    {
-                        fac.RemoveTechSig(i);
                     }
                 }
                 funcDiv = 'd';
                 break;
-            default:
-                // catch error
-                break;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            // press space to change view
-            StarUtils.ChangeView();
-        }
 
+        // Input functions here... in future projects let's put all this stuff in a dedicated file for neatness. Lessons learned.
         if (Input.GetKeyDown(KeyCode.Period))
         {
-            // press . (>) to increase warp
             IncreaseWarp();
         }
 
         if (Input.GetKeyDown(KeyCode.Comma))
         {
-            // press , (<) to decrease warp
             DecreaseWarp();
         }
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            // press , (<) to decrease warp
-            focusOn = new Vector3(0.0f, 0.0f, 0.0f);
             GameObject.Find("ViewCam").transform.localPosition = new Vector3(-10.0f, 16.0f, -42.0f);
             GameObject.Find("ViewCam").transform.LookAt(new Vector3(0.0f, 0.0f, 0.0f));
         }
@@ -161,7 +137,10 @@ public class Core : MonoBehaviour
         if (Input.GetMouseButton(0))
             CameraController.Rotation();
 
-        if (Input.GetKey(KeyCode.F) && StarUtils.facViewable != 99)
+        if (Input.GetKeyDown(KeyCode.M))
+            StarUtils.MuteAll();
+
+        if (Input.GetKeyDown(KeyCode.F) && StarUtils.facViewable != 99)
             DisplayFac.ViewFacSt(StarUtils.facViewable);
 
         CameraController.Scroll();
@@ -169,9 +148,12 @@ public class Core : MonoBehaviour
         // each frame call the notification control, which manages the display of notable events (e.g. Supernovae) to the user
         NotificationUtils.NotificationControl();
 
+        // function to check if a star was clicked on, it's in StarUtils because it's actually a fairly long function involving raycasts, and to avoid having to specify "StarUtils." for variables
+        // however, just look most other things in this area, should be wrapped in a faction in a dedicated controls file for future projects.
         StarUtils.CheckForClick();
     }
 
+    // self explanatory
     private void IncreaseWarp()
     {
         switch (warp)
@@ -193,16 +175,13 @@ public class Core : MonoBehaviour
                 GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 5 years per sec");
                 break;
             case 130.0f:
-                warp = 130.0f;
                 GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 5 years per sec");
-                break;
-            case 260.0f:
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 10 years per sec"); //this level of time warp no longer allowed! (causes a notifications backlog at this speed)
                 break;
 
         }
     }
 
+    // self explanatory
     private void DecreaseWarp()
     {
         switch (warp)
@@ -234,6 +213,7 @@ public class Core : MonoBehaviour
         }
     }
 
+    // initialise values
     static Core()
     {
         rotationDelta = 0.0f;

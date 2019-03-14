@@ -5,31 +5,16 @@ using UnityEngine;
 public class NotificationUtils : MonoBehaviour
 {
     // display time is how long to wait between notifications
-    public static float DISPLAYTIME = 7.5f;
+    private const float DISPLAYTIME = 7.5f;
 
     private static string ncS1;
     private static float notificationDelta;
     private static string pendingAnnounces;
 
-    private static bool pendingSupernovaNot;
-    private static List<Notification> snList;
     private static List<Notification> lsnList;
 
     private static List<Notification> tsiList;
-    private static List<Notification> tsmList;
     private static List<Notification> ecList;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     // statics need to be in an Init function, since no default constructor call is made
     public static void Init()
@@ -39,17 +24,12 @@ public class NotificationUtils : MonoBehaviour
         notificationDelta = 0.0f;
         pendingAnnounces = "";
 
-        pendingSupernovaNot = false;
-
-        snList = new List<Notification>();
         lsnList = new List<Notification>();
         tsiList = new List<Notification>();
-        tsmList = new List<Notification>();
         ecList = new List<Notification>();
     }
 
     // this control allows each notification to get their turn, whilst also allowing the queuing up of several notifications,
-    // finally, notifications get grouped together (see "AnnounceSupernovas()" ) for how that is done
     public static void NotificationControl()
     {
         if (notificationDelta >= DISPLAYTIME)
@@ -61,17 +41,9 @@ public class NotificationUtils : MonoBehaviour
             {
                 switch (pendingAnnounces[0])
                 {
-                    case 's':
-                        ncS1 = AnnounceSupernovas();
-                        snList.Clear();
-                        break;
                     case 'i':
                         ncS1 = AnnounceTSidentify();
                         tsiList.RemoveAt(0);
-                        break;
-                    case 'm':
-                        ncS1 = AnnounceTSmultiple();
-                        tsmList.RemoveAt(0);
                         break;
                     case 'e':
                         ncS1 = AnnounceEC();
@@ -94,20 +66,6 @@ public class NotificationUtils : MonoBehaviour
             notificationDelta = notificationDelta + Time.deltaTime;
     }
 
-    public static string AnnounceSupernovas()
-    {
-        pendingSupernovaNot = false;
-        // if there are multiple supernova events waiting to be announced, announce them all at once:
-        if (snList.Count>1)
-        {
-            return snList.Count.ToString() + " supernovae occured, no civilisations were affected.";
-        } 
-        else //if there is only one, announce it singly in full detail:
-        {
-            return "The star " + snList[0].content1 + " erupted into a supernova, no civilisations were affected.";
-        }
-    }
-
     public static string AnnounceLethalSupernova()
     {
         if (lsnList[0].content2 == "")
@@ -123,27 +81,9 @@ public class NotificationUtils : MonoBehaviour
         return "The " + tsiList[0].content2 + " found a strange signal, originating from " + tsiList[0].content1 + tsiList[0].content3 + ".";
     }
 
-    public static string AnnounceTSmultiple()
-    {
-        return "The " + tsmList[0].content2 + " have now identified MULTIPLE signals from " + tsmList[0].content1 + tsmList[0].content3 + ".";
-    }
-
     public static string AnnounceEC()
     {
         return "The " + ecList[0].content2 + " have established communication with the " + ecList[0].content1 + "!";
-    }
-
-    public static void AddSupernova(string emittedAt)
-    {
-        snList.Add(new Notification(emittedAt));
-
-        if (!pendingSupernovaNot)
-        {
-            // if a supernova notification is NOT already waiting to be announced do, this:
-            pendingSupernovaNot = true;
-            // adding an 's' to the pendingAnnounces string basically queues up supernova announcement (as 's') for NotificationControl
-            pendingAnnounces = pendingAnnounces + "s";
-        }
     }
 
     public static void AddLethalSupernova(string emittedAt, string killed1, string killed2)
@@ -160,12 +100,6 @@ public class NotificationUtils : MonoBehaviour
     {
         tsiList.Add(new Notification(emittedFrom, receivedAt, extra));
         pendingAnnounces = pendingAnnounces + "i";
-    }
-
-    public static void AddTSM(string emittedFrom, string receivedAt, string extra)
-    {
-        tsmList.Add(new Notification(emittedFrom, receivedAt, extra));
-        pendingAnnounces = pendingAnnounces + "m";
     }
 
     public static void AddEC(string emittedFrom, string receivedAt)

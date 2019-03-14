@@ -4,12 +4,18 @@ using UnityEngine;
 
 public static class FactionUtils
 {
-    // NOTE THAT many of these functions would be better as non-statics, but due to the random-generation of factions keeping as many declarations as static as possible makes it easier to work with
-    public static List<Faction> allFactions;
-    public static List<Color> facPalette;
-    public static float beamRad;
-    public static float beamRange;
+    private const float BEAM_RADIUS = 0.0005f;
+    private const float BEAM_RANGE = 7.5f;
+    public static readonly List<Color> FACTION_PALETTE = new List<Color>() {
+        new Color(1.0f, 0.0f, 0.0f), new Color(0.0f, 1.0f, 0.0f), new Color(0.0f, 0.0f, 1.0f),
+        new Color(0.0f, 1.0f, 1.0f), new Color(1.0f, 1.0f, 0.0f), new Color(1.0f, 0.5f, 1.0f), new Color(0.5f, 0.5f, 0.0f), new Color(0.5f, 1.0f, 0.5f),
+        new Color(0.3f, 0.3f, 1.0f), new Color(1.0f, 0.3f, 0.0f), new Color(1.0f, 0.0f, 0.5f), new Color(0.0f, 0.5f, 0.0f), new Color(0.5f, 0.0f, 0.5f),
+        new Color(0.5f, 0.0f, 0.0f)
+    };
 
+    public static List<Faction> allFactions;
+
+    // Updates the left-hand faction list
     public static void UpdateDisplay()
     {
         for (int i = 0; i < 14; i++)
@@ -27,6 +33,7 @@ public static class FactionUtils
         }
     }
 
+    // when a faction is clicked on, this function is called, which basically fills in the lower pane with the faction's info
     public static void DisplayFacInfo(int index)
     {
         string tsbuild = "";
@@ -94,28 +101,11 @@ public static class FactionUtils
     public static void Init()
     {
         allFactions = new List<Faction>();
-        facPalette = new List<Color>();
-        beamRad = 0.0005f;
-        beamRange = 7.5f;
-
-        facPalette.Add(new Color(1.0f, 0.0f, 0.0f));
-        facPalette.Add(new Color(0.0f, 1.0f, 0.0f));
-        facPalette.Add(new Color(0.0f, 0.0f, 1.0f));
-        facPalette.Add(new Color(0.0f, 1.0f, 1.0f));
-        facPalette.Add(new Color(1.0f, 1.0f, 0.0f));
-
-        facPalette.Add(new Color(1.0f, 0.5f, 1.0f));
-        facPalette.Add(new Color(0.5f, 0.5f, 0.0f));
-        facPalette.Add(new Color(0.5f, 1.0f, 0.5f));
-        facPalette.Add(new Color(0.3f, 0.3f, 1.0f));
-        facPalette.Add(new Color(1.0f, 0.3f, 0.0f));
-
-        facPalette.Add(new Color(1.0f, 0.0f, 0.5f));
-        facPalette.Add(new Color(0.0f, 0.5f, 0.0f));
-        facPalette.Add(new Color(0.5f, 0.0f, 0.5f));
-        facPalette.Add(new Color(0.5f, 0.0f, 0.0f));
     }
 
+    // this function counts down the timers on the receiving of techsignatures. In real life a signal has to travel at the speed of light and can take centuries to reach us,
+    // in Aliens Out There, this is faked: essentially the technosignature is "added" to the civilisation as soon as it is emitted,
+    // BUT the civilisation doesn't get to acknowledge it until a timer counts down to 0. The starting value of the timer is a function of the distance between the sender and receiver of the signal... larger distances have larger timers
     public static void StUpdate(float timeDelta)
     {
         foreach (Faction fac in allFactions)
@@ -127,7 +117,7 @@ public static class FactionUtils
         }
     }
 
-    // self-explanatory
+    // generates all factions
     public static void GenerateAllFactions(int nFac)
     {
         int counter = 0;
@@ -140,19 +130,29 @@ public static class FactionUtils
                 randN = Random.Range(0, StarUtils.allStars.Count);
                 if (StarUtils.allStars[randN].controllingFaction == 95)
                 {
-                    allFactions.Add(GenerateFactionAt(randN, counter));
                     setHome = true;
+                    foreach(Faction fac in allFactions)
+                    {
+                        if (GetFactionAdj(randN)==fac.name)
+                            setHome = false;
+
+                    }
                 }
             }
+            allFactions.Add(new Faction(GetFactionAdj(randN), randN, counter));
+
+            StarUtils.allStars[randN].controllingFaction = counter;
+            StarUtils.allStars[randN].factionColour = FACTION_PALETTE[counter];
+            StarUtils.allStars[randN].ChangeColour(StarUtils.allStars[randN].factionColour);
+
             setHome = false;
             counter = counter + 1;
         }
-
-        StarUtils.RefreshView();
     }
 
-    // called right at the start, generates a NEW faction at the specified star
-    public static Faction GenerateFactionAt(int stIndex, int fCol)
+    // Takes the name of a star and creates a string representing the faction name / adjective of any civilisation that would call this star home... Eg: Star="Norgallia Tau" -> Faction="Norgallia"
+    // It's a very simple function, just takes away the greek letter.
+    public static string GetFactionAdj(int stIndex)
     {
         string cname = "";
         bool PVreached = false;
@@ -162,11 +162,11 @@ public static class FactionUtils
             if (c == ' ') PVreached = true;
             if (!PVreached) cname = cname + c;
         }
-        StarUtils.allStars[stIndex].controllingFaction = fCol;
-        StarUtils.allStars[stIndex].factionColour = facPalette[fCol];
-        return new Faction(cname, stIndex, fCol);
+
+        return cname;
     }
 
+    // self explanatary
     public static void LaunchTechnosignatures()
     {
         int randN;
@@ -189,6 +189,7 @@ public static class FactionUtils
                 {
                     randN = Random.Range(0, StarUtils.allStars.Count);
                 }
+
                 Vector3 aimToward = new Vector3();
                 foreach (Faction f in allFactions)
                 {
@@ -196,23 +197,16 @@ public static class FactionUtils
                     Vector3 fudge = new Vector3();
                     aimToward = (StarUtils.allStars[fac.homeStar].gObj.transform.position - StarUtils.allStars[randN].gObj.transform.position) / Vector3.Distance(StarUtils.allStars[fac.homeStar].gObj.transform.position, StarUtils.allStars[randN].gObj.transform.position);
 
-                    if (fac != f && Vector3.Distance(StarUtils.allStars[fac.homeStar].gObj.transform.position, StarUtils.allStars[f.homeStar].gObj.transform.position) < beamRange)
+                    if (fac != f && Vector3.Distance(StarUtils.allStars[fac.homeStar].gObj.transform.position, StarUtils.allStars[f.homeStar].gObj.transform.position) < BEAM_RANGE)
                     {
-                        // Generate random place to fire beam into... an easy way to ensure that areas of the star field that are the most
-                        // dense are targetted most often, is to simply randomly target stars
-
-                        // HOWEVER, 
-
                         direction = (StarUtils.allStars[fac.homeStar].gObj.transform.position - StarUtils.allStars[f.homeStar].gObj.transform.position) / Vector3.Distance(StarUtils.allStars[fac.homeStar].gObj.transform.position, StarUtils.allStars[f.homeStar].gObj.transform.position);
                         fudge = aimToward - direction;
-                        if (fudge.x < beamRad && fudge.y < beamRad && fudge.z < beamRad && fudge.x > beamRad * (-1.0f) && fudge.y > beamRad * (-1.0f) && fudge.z > beamRad * (-1.0f))
+                        if (fudge.x < BEAM_RADIUS && fudge.y < BEAM_RADIUS && fudge.z < BEAM_RADIUS && fudge.x > BEAM_RADIUS * (-1.0f) && fudge.y > BEAM_RADIUS * (-1.0f) && fudge.z > BEAM_RADIUS * (-1.0f))
                         {
                             //Debug.Log("Beam hit! from " + fac.name + " to " + f.name + ".");
                             // create incoming Techsig item here
                             float timeToReceive = Vector3.Distance(StarUtils.allStars[fac.homeStar].gObj.transform.position, StarUtils.allStars[randN].gObj.transform.position) * 110.0f;
                             f.AddTechSigToList(fac.index, Core.years + timeToReceive);
-
-                            // Convert those 2 Debug.Logs to a notification
                         }
                     }
                 }
@@ -240,10 +234,11 @@ public class Faction
         index = colInd;
         identifiedTechSigs = new List<int>();
         contactedCivs = new List<int>();
-        fcol = FactionUtils.facPalette[colInd];
+        fcol = FactionUtils.FACTION_PALETTE[colInd];
         incomingTechSig = new List<Technosignature>();
         isAlive = true;
 
+        // Generate a little extra snippet of info on how likely the faction is to find nearby intelligent life that they can communicate with, and also get fried by gamma rays when nearby stars go supernova.
         if (Vector3.Distance(StarUtils.allStars[homeStar].gObj.transform.position, new Vector3(0f, 0f, 0f)) < 3.0f)
             moreInfo = "This civilisation's region of space is dense with stars that may harbour intelligent life, but the danger of death by supernova is great.";
         else if (Vector3.Distance(StarUtils.allStars[homeStar].gObj.transform.position, new Vector3(0f, 0f, 0f)) < 5.0f)
@@ -251,15 +246,17 @@ public class Faction
         else
             moreInfo = "This civilisation's region of space has few nearby stars that may harbour intelligent life, but the danger of death by supernova is small.";
 
-        if (homeStar >= (StarUtils.allStars.Count - StarUtils.numLatestars))
+        if (homeStar >= (StarUtils.allStars.Count - StarUtils.NUMBER_OF_LATE_STAGE_STARS))
             moreInfo = "This civilisation's home star is nearing the end of its life, death by supernova is very likely!";
     }
 
+    // self explanatary, this gets called at the exact time that the tech sig is emitted
     public void AddTechSigToList(int sender, float time)
     {
         incomingTechSig.Add(new Technosignature(sender, time));
     }
 
+    // this gets called after the signal has "travelled" through space (the travel is faked with a simple timer)
     public void ReadTechSig(int ind)
     {
         if (isAlive)
@@ -272,7 +269,7 @@ public class Faction
                     state = '1';
                     // if the techsig being read comes from a region from which we've already received a tech sig, we do THIS: (this is ALREADY an area of interest)
                     // Check if the sender has technosignaures from us, if they do... this message was a "reply" and therefore we upgrade the state of awareness to "contact established"!
-                    // if NO to above: state = 1, if YES: state = 2 (both states need to also send a notification explaining it)
+                    // if NO to above: state = 1, if YES: state = 2
 
                     foreach (int senderKnows in FactionUtils.allFactions[incomingTechSig[ind].sender].identifiedTechSigs)
                     {
@@ -288,59 +285,38 @@ public class Faction
                     }
                 }
                 // if not state remains '0'
-
             }
 
             switch (state)
             {
-                // alter some of these messages to the capital star's name!
                 case '0':
-                    //Debug.Log("The " + name + " civilisation has identified a technosignature originating from the region of space around the " + FactionUtils.allFactions[incomingTechSig[ind].sender].name + " civilisation!");
-                    //Convert this message to notification!
                     identifiedTechSigs.Add(FactionUtils.allFactions[incomingTechSig[ind].sender].index);
                     if (FactionUtils.allFactions[incomingTechSig[ind].sender].isAlive)
                         NotificationUtils.AddTSI(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].starName, name, "");
                     else
                         NotificationUtils.AddTSI(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].starName, name, ", one of the last signals of a long dead civilisation");
                     break;
-                case '1':
-                    //Debug.Log("The " + name + " civilisation has now identified MULTIPLE technosignatures originating from the region of space around the " + FactionUtils.allFactions[incomingTechSig[ind].sender].name + " civilisation!");
-                    //Convert this message to notification!
-                    /*
-                    if (FactionUtils.allFactions[incomingTechSig[ind].sender].isAlive)
-                        NotificationUtils.AddTSM(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].gObj.name, name, "");
-                    else
-                        NotificationUtils.AddTSM(StarUtils.allStars[FactionUtils.allFactions[incomingTechSig[ind].sender].homeStar].gObj.name, name, ", the last signals of a long dead civilisation");
-                        */
-
-                    //NOTIFICATION DISABLED!
-                    break;
                 case '2':
-                    //Debug.Log("The " + name + " civilisation and the " + FactionUtils.allFactions[incomingTechSig[ind].sender].name + " civilisation have established first contact!");
-                    //Convert this message to notification!
                     contactedCivs.Add(FactionUtils.allFactions[incomingTechSig[ind].sender].index);
                     FactionUtils.allFactions[incomingTechSig[ind].sender].contactedCivs.Add(index);
                     NotificationUtils.AddEC(FactionUtils.allFactions[incomingTechSig[ind].sender].name, name);
-                    break;
-                case '3':
-                    //Debug.Log("The " + name + " civilisation and the " + FactionUtils.allFactions[incomingTechSig[ind].sender].name + " have continued in contact!");
-                    // THIS PART ISN'T NECESSARY TO BE A NOTIFICATION!
                     break;
             }
         }
 
     }
 
+    // self explanatary, always gets called after ReadTechSig()
     public void RemoveTechSig(int ind)
     {
         incomingTechSig.RemoveAt(ind);
     }
 
+    // the homeplanet is caught by a supernova, time to die.
     public void Die(string killer, float date)
     {
-        //the homeplanet is caught by a supernova, time to die.
-        if (StarUtils.allStars[homeStar].controllingFaction!=99)
-            StarUtils.allStars[homeStar].controllingFaction = 98;
+        if (StarUtils.allStars[homeStar].controllingFaction!=99) // 99 means the star went supernova and turns into nebula
+            StarUtils.allStars[homeStar].controllingFaction = 98; // 98 means the super was caught by nearby supernova
 
         name = name + " (dead)";
         fcol = Color.black;

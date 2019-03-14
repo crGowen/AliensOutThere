@@ -59,6 +59,7 @@
      <Compile Include="Assets\Scripts\FactionUtils.cs" />
      <Compile Include="Assets\Scripts\NotificationUtils.cs" />
      <Compile Include="Assets\Scripts\StarUtils.cs" />
+     <Compile Include="Assets\Scripts\SuperNovaFlares.cs" />
      <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Surface-Mobile.shader" />
      <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
      <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Properties.cginc" />

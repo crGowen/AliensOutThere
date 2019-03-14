@@ -1,4 +1,4 @@
-# Folders containing meta deta
+# Folders containing meta data
 /Library
 /Temp
 /Logs
@@ -8,6 +8,3 @@
 # Meta data files
 .csproj
 .suo
-
-
-

@@ -25,24 +25,15 @@ public class Core : MonoBehaviour
     public GameObject SNflare;
     public GameObject soundSource;
 
-    private static float warp;
-    public static char funcDiv = 'a';
-    private static float rotationDelta;
-    private static float clockDelta;
-    private static float yearDelta;
-    private static float notificationDelta;
+    private static float warp = 1.0f;
+    private static float yearDelta = 0.0f;
     public static float years = 0.0f;
 
     void Start()
     {
         GameObject.Find("ViewCam").transform.localPosition = new Vector3(-10.0f, 16.0f, -42.0f);
         GameObject.Find("ViewCam").transform.LookAt(new Vector3(0.0f, 0.0f, 0.0f));
-        warp = 1.0f;
-        GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 2 weeks per sec");
-
-        rotationDelta = 0.0f;
-        clockDelta = 0.0f;
-        yearDelta = 0.0f;
+        GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~5 months per sec");
         GenerateAllStars();
         GenerateAllFactions();
         DisplayFacInfo(0);
@@ -52,76 +43,48 @@ public class Core : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        switch (funcDiv)
+        foreach (Star s in allStars)
         {
-            case 'a':
-                // rotate the stars around the galactic nucleus (speed of rotation depends on time warp)
-                rotationDelta = rotationDelta + Time.deltaTime;
-                clockDelta = clockDelta + Time.deltaTime;
-                foreach (Star s in allStars)
-                {
-                    s.gObj.transform.RotateAround(Vector3.zero, Vector3.up, rotationDelta * (-0.002f) * warp);
-                }
-                rotationDelta = 0.0f;
-                funcDiv = 'b';
-                break;
-            case 'b':
-                // time keeping, updates the clock: "t = + [] years"
-                // also includes the fading and deletion of supernova flares
-                clockDelta = clockDelta + Time.deltaTime;
-                rotationDelta = rotationDelta + Time.deltaTime;
-                years = years + (clockDelta * warp / 26.0f);
-                GameObject.Find("ElapsedTime").GetComponent<TMPro.TextMeshProUGUI>().SetText("T: +" + years.ToString("0.00") + " years");
-                funcDiv = 'c';
-                StUpdate(clockDelta);
-                UpdateDisplay();
-                clockDelta = 0.0f;
-
-                for (int i = 0; i < flareList.Count; i++)
-                {
-                    if (flareList[i].timeLeft <= -4.5f)
-                    {
-                        flareList[i].Kill();
-                        flareList.RemoveAt(i);
-                        i = i - 1;
-                    }
-                    else if (flareList[i].timeLeft <= 0.0f)
-                    {
-                        flareList[i].flash.GetComponent<Light>().intensity = 10f - (-20f * flareList[i].timeLeft);
-                        flareList[i].timeLeft = flareList[i].timeLeft - Time.deltaTime;
-                    }
-                    else
-                        flareList[i].timeLeft = flareList[i].timeLeft - Time.deltaTime;
-                }
-
-                break;
-            case 'c':
-                // launches supernovae and technosignatures... this is done once every year
-                clockDelta = clockDelta + Time.deltaTime;
-                rotationDelta = rotationDelta + Time.deltaTime;
-                if ((years - yearDelta) > 1.0f)
-                {
-                    yearDelta = years;
-                    LaunchAllSupernovae(allStars.Count);
-                    LaunchTechnosignatures();
-                }
-                foreach (Faction fac in allFactions)
-                {
-                    for (int i = 0; i < fac.incomingTechSig.Count; i++)
-                    {
-                        if (years > fac.incomingTechSig[i].timeToReceive)
-                        {
-                            fac.ReadTechSig(i);
-                            fac.RemoveTechSig(i);
-                            i--;
-                        }
-                    }
-                }
-                funcDiv = 'a';
-                break;
+            s.gObj.transform.RotateAround(Vector3.zero, Vector3.up, Time.deltaTime * (-0.002f) * warp);
         }
-
+        years = years + (Time.deltaTime * warp / 26.0f);
+        GameObject.Find("ElapsedTime").GetComponent<TMPro.TextMeshProUGUI>().SetText("T: +" + (years*10f).ToString("0.00") + " years");
+        StUpdate(Time.deltaTime);
+        UpdateDisplay();
+        if ((years - yearDelta) > 1.0f)
+        {
+            yearDelta = years;
+            LaunchAllSupernovae(allStars.Count);
+            LaunchTechnosignatures();
+        }
+        for (int i = 0; i < flareList.Count; i++)
+        {
+            if (flareList[i].timeLeft <= -4.5f)
+            {
+                flareList[i].Kill();
+                flareList.RemoveAt(i);
+                i = i - 1;
+            }
+            else if (flareList[i].timeLeft <= 0.0f)
+            {
+                flareList[i].flash.GetComponent<Light>().intensity = 10f - (-20f * flareList[i].timeLeft);
+                flareList[i].timeLeft = flareList[i].timeLeft - Time.deltaTime;
+            }
+            else
+                flareList[i].timeLeft = flareList[i].timeLeft - Time.deltaTime;
+        }
+        foreach (Faction fac in allFactions)
+        {
+            for (int i = 0; i < fac.incomingTechSig.Count; i++)
+            {
+                if (years > fac.incomingTechSig[i].timeToReceive)
+                {
+                    fac.ReadTechSig(i);
+                    fac.RemoveTechSig(i);
+                    i--;
+                }
+            }
+        }
         // each frame call the notification control, which manages the display of notable events (e.g. Supernovae) to the user
         NotificationUtils.NotificationControl();
         InputController.CheckInputs();
@@ -552,22 +515,22 @@ public class Core : MonoBehaviour
         {
             case 1.0f:
                 warp = 2.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 1 month per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~10 months per sec");
                 break;
             case 2.0f:
                 warp = 4.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 2 months per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~20 months per sec");
                 break;
             case 4.0f:
                 warp = 26.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 1 year per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~10 years per sec");
                 break;
             case 26.0f:
                 warp = 130.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 5 years per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~50 years per sec");
                 break;
             case 130.0f:
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 5 years per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~50 years per sec");
                 break;
 
         }
@@ -579,27 +542,27 @@ public class Core : MonoBehaviour
         switch (warp)
         {
             case 1.0f:
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 2 weeks per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~5 months per sec");
                 break;
             case 2.0f:
                 warp = 1.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 2 weeks per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~5 months per sec");
                 break;
             case 4.0f:
                 warp = 2.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 1 month per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~10 months per sec");
                 break;
             case 26.0f:
                 warp = 4.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 2 months per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~20 months per sec");
                 break;
             case 130.0f:
                 warp = 26.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 1 year per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~10 years per sec");
                 break;
             case 260.0f:
                 warp = 130.0f;
-                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: 5 years per sec");
+                GameObject.Find("WarpIndicator").GetComponent<TMPro.TextMeshProUGUI>().SetText("Time warp: ~50 years per sec");
                 break;
 
         }

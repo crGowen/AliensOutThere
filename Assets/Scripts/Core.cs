@@ -146,7 +146,7 @@ public class Core : MonoBehaviour
                     Star s = allStars[int.Parse(hit.collider.gameObject.name)];
 
                     if (s.controllingFaction == 99)
-                        GameObject.Find("CivilisationName").GetComponent<UnityEngine.UI.Text>().text = s.starName + " Nebula";
+                        GameObject.Find("CivilisationName").GetComponent<UnityEngine.UI.Text>().text = "Supernova Remnant";
                     else
                         GameObject.Find("CivilisationName").GetComponent<UnityEngine.UI.Text>().text = s.starName;
 
@@ -160,7 +160,7 @@ public class Core : MonoBehaviour
                     switch (s.controllingFaction)
                     {
                         case 99:
-                            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This nebula is what remains of the star " + s.starName + ", which went supernova.";
+                            GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "This is the supernova remnant that sits in the heart of the " + s.starName + " nebula.";
                             break;
                         case 98:
                             GameObject.Find("CapitalPlanet").GetComponent<UnityEngine.UI.Text>().text = "It seems this star system was once home to intelligent life, but all that remains now is ruins.";

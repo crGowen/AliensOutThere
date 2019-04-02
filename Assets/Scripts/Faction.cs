@@ -108,7 +108,7 @@ public class Faction
         name = name + " (dead)";
         fcol = Color.black;
         isAlive = false;
-        moreInfo = "This civilisation was wiped out at T= +" + date.ToString("0") + " years, when nearby star " + killer + " went supernova.";
+        moreInfo = "This civilisation was wiped out at T= +" + (date * 10f).ToString("0") + " years, when nearby star " + killer + " went supernova.";
         Core.allStars[homeStar].factionColour = Color.black;
         Core.allStars[homeStar].ChangeColour(Color.black);
     }
